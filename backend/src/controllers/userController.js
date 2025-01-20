@@ -11,7 +11,6 @@ const getUserIdFromToken = (req) => {
   return decoded.userId;
 }
 
-
 export const createUser = async (req, res) =>{
     const { username, email, password } = req.body;
     try {
@@ -45,7 +44,7 @@ export const createUser = async (req, res) =>{
             message: "Something went wrong"
         })
     }
- };
+};
 
  export const loginUser = async (req, res) => {
     const { email, password } = req.body;
@@ -101,7 +100,7 @@ export const createUser = async (req, res) =>{
         message: "Internal Error. Please try again later.",
       });
     }
-  };
+};
 export const logoutUser = async (req, res) => {
     try {
       res.cookie("token", "", {
@@ -122,7 +121,7 @@ export const logoutUser = async (req, res) => {
         message: "Internal Server Error. Please try again later.",
       });
     }
-  };
+};
   
   export const addBooks = async (req, res) => { 
     const { books } = req.body;  
@@ -196,7 +195,6 @@ export const getUser = async (req, res) => {
   }
 };
 
-
 export const updateStatus = async (req, res) => {
   const { id } = req.params; 
   const { status } = req.body;  
@@ -230,5 +228,29 @@ export const updateStatus = async (req, res) => {
     return res.status(500).json(
       { message: "Failed to update status." }
     );
+  }
+}
+
+export const deleteBook = async(req, res)=>{
+  const { id } = req.params
+  const userId = req.userId
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.books) {
+      return res.status(404).json({ message: "User or books not found." });
+    }
+    const updatedBooks = user.books.filter(book => book.id !== String(id));
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { books: updatedBooks },
+    });
+
+    return res.status(200).json({ message: "Book deleted successfully!" });
+  } catch (error) {
+    console.error("Error deleting book:", error);
+    return res.status(500).json({ message: "Failed to delete book." });
   }
 }

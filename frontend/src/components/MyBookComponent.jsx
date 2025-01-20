@@ -1,11 +1,12 @@
 import React, {useState} from 'react'
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import bin from '../assets/bin.png'
 
 
 function MyBookComponent({ book }) {
   const [status, setStatus] = useState(book.status || "Reading")
-  
+  const [info, useInfo] = useState(false)
   const id = book.id
   const handleStatus = async (newStatus) => {
     setStatus(newStatus);
@@ -23,8 +24,7 @@ function MyBookComponent({ book }) {
     } catch (error) {
       console.error("Error updating status:", error);
     }
-  };
-  const [info, useInfo] = useState(false)
+  }
   const onShowInfo= ()=>{
     useInfo(true)
   }
@@ -47,6 +47,31 @@ function MyBookComponent({ book }) {
         return "border-gray-700 text-gray-700";
     }
   }
+  const deletebook = async()=>{
+    const token = Cookies.get('token')
+    if(window.confirm("Do you want to Delete this book?")){
+      try {
+        const response = await axios.delete(`http://localhost:3000/user/deletebook/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        })
+        console.log("book deleted:", response.data);
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
+      } catch (error) {
+        console.error("Error deleting book:", error);
+      }
+
+    }else{
+      console.log("book was not deleted");
+      
+    }
+
+  }
+
   
   return (
     <>
@@ -82,15 +107,21 @@ function MyBookComponent({ book }) {
     </div>
     
     :
-    <div onClick={onShowInfo} className=" relative h-[400px] p-2 border rounded shadow bg-white font-yuji duration-300 hover:scale-110">
+    <div  className=" relative h-[400px] p-2 border rounded shadow bg-white font-yuji duration-300 hover:scale-110">
             
             <img src={book.volumeInfo && book.volumeInfo.imageLinks ? book.volumeInfo.imageLinks.thumbnail : fallbackImage} alt={book.volumeInfo.title} className='w-full h-[200px]' />
             <h1 className='font-semibold text-[15px] h-[100px] pt-4'>{book.volumeInfo.title}</h1>
             <p className='h-[50px] text-[12px] pt-2'>{book.volumeInfo.authors}</p>
-            
-            <div className={`w-auto border-2 flex justify-center align-middle rounded-lg ${getStatusClasses(status)}`}>
-              <p  className=' text-[15px] py-[2px]   font-bold'>{book.status}</p>
+            <div className='flex w-full space-x-2'>
+              
+              <div onClick={onShowInfo}  className={`cursor-pointer w-3/4 border-2 flex justify-center align-middle rounded-lg ${getStatusClasses(status)}`}>
+                <p  className=' text-[15px] py-[2px]   font-bold'>{book.status}</p>
+              </div>
+              <div onClick={deletebook} className='cursor-pointer w-1/4 border-2 border-[#A71313] flex justify-center align-middle rounded-lg'>
+                <img src={bin} alt="" className='p-2'/>
+              </div>
             </div>
+            
 
             
             
